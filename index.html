@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buku Nilai & Presensi Santri</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel untuk compile JSX di browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background: white; color: black; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white min-h-screen">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    const CLASSES = ["8A", "8B", "9A", "9C", "11A", "11B", "11C", "11D"];
+
+    const INITIAL_STUDENTS = {
+      "8A": [
+        { id: 1, nisn: "0091122301", name: "Ahmad Fauzan", gender: "L", hadir: 18, sakit: 1, izin: 1, alpa: 0, tugas: 85, portofolio: 88, uh: 80, uts: 82, uas: 86 },
+        { id: 2, nisn: "0091122302", name: "Bilal Habasyi", gender: "L", hadir: 20, sakit: 0, izin: 0, alpa: 0, tugas: 90, portofolio: 92, uh: 88, uts: 85, uas: 90 },
+        { id: 3, nisn: "0091122303", name: "Faris Al-Ghifari", gender: "L", hadir: 17, sakit: 2, izin: 1, alpa: 0, tugas: 78, portofolio: 75, uh: 72, uts: 74, uas: 76 }
+      ],
+      "8B": [
+        { id: 4, nisn: "0091122401", name: "Aisyah Humaira", gender: "P", hadir: 20, sakit: 0, izin: 0, alpa: 0, tugas: 92, portofolio: 95, uh: 90, uts: 88, uas: 94 },
+        { id: 5, nisn: "0091122402", name: "Fathimah Az-Zahra", gender: "P", hadir: 19, sakit: 1, izin: 0, alpa: 0, tugas: 88, portofolio: 85, uh: 84, uts: 86, uas: 89 }
+      ],
+      "9A": [
+        { id: 6, nisn: "0081122101", name: "Dani Ramadhan", gender: "L", hadir: 19, sakit: 1, izin: 0, alpa: 0, tugas: 82, portofolio: 80, uh: 78, uts: 80, uas: 83 }
+      ],
+      "9C": [
+        { id: 7, nisn: "0081122301", name: "Zubair bin Awwam", gender: "L", hadir: 20, sakit: 0, izin: 0, alpa: 0, tugas: 95, portofolio: 90, uh: 92, uts: 94, uas: 96 }
+      ],
+      "11A": [
+        { id: 8, nisn: "0061122101", name: "Muhammad Zaidan", gender: "L", hadir: 20, sakit: 0, izin: 0, alpa: 0, tugas: 90, portofolio: 90, uh: 88, uts: 86, uas: 91 },
+        { id: 9, nisn: "0061122102", name: "Rifqi Al-Farizi", gender: "L", hadir: 18, sakit: 1, izin: 1, alpa: 0, tugas: 80, portofolio: 82, uh: 76, uts: 78, uas: 82 }
+      ],
+      "11B": [
+        { id: 10, nisn: "0061122201", name: "Khadijah Al-Kubra", gender: "P", hadir: 20, sakit: 0, izin: 0, alpa: 0, tugas: 94, portofolio: 95, uh: 92, uts: 90, uas: 95 }
+      ],
+      "11C": [
+        { id: 11, nisn: "0061122301", name: "Salman Al-Farisi", gender: "L", hadir: 19, sakit: 0, izin: 1, alpa: 0, tugas: 85, portofolio: 86, uh: 82, uts: 84, uas: 88 }
+      ],
+      "11D": [
+        { id: 12, nisn: "0061122401", name: "Maryam An-Nisa", gender: "P", hadir: 20, sakit: 0, izin: 0, alpa: 0, tugas: 91, portofolio: 89, uh: 88, uts: 87, uas: 90 }
+      ]
+    };
+
+    const INITIAL_SETORAN = [
+      { id: 101, studentId: 8, studentName: "Muhammad Zaidan", className: "11A", type: "nazham", title: "Alfiyah Ibnu Malik", range: "Bait 1 - 25 (Al-Muqaddimah)", date: "2026-10-01", score: 95, status: "Mutqin", notes: "Makhraj & tajwid sangat baik" },
+      { id: 102, studentId: 1, studentName: "Ahmad Fauzan", className: "8A", type: "matan", title: "Matan Al-Jurumiyyah", range: "Bab Kalam s/d Bab Al-I'rab (Hal 1-4)", date: "2026-10-02", score: 88, status: "Lancar", notes: "Pengucapan contoh tanda i'rab tepat" }
+    ];
+
+    function App() {
+      const [currentClass, setCurrentClass] = useState("8A");
+      const [activeTab, setActiveTab] = useState("nilai"); // "nilai" | "setoran" | "kehadiran"
+      const [studentsData, setStudentsData] = useState(() => {
+        const saved = localStorage.getItem("buku_nilai_santri_v1");
+        return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+      });
+      const [setoranList, setSetoranList] = useState(() => {
+        const saved = localStorage.getItem("setoran_santri_v1");
+        return saved ? JSON.parse(saved) : INITIAL_SETORAN;
+      });
+      const [searchQuery, setSearchQuery] = useState("");
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [isSetoranModalOpen, setIsSetoranModalOpen] = useState(false);
+      const [newStudent, setNewStudent] = useState({ name: "", nisn: "", gender: "L" });
+      const [newSetoran, setNewSetoran] = useState({
+        studentId: "",
+        title: "",
+        range: "",
+        score: 85,
+        status: "Lancar",
+        notes: "",
+        date: new Date().toISOString().split("T")[0]
+      });
+
+      useEffect(() => {
+        localStorage.setItem("buku_nilai_santri_v1", JSON.stringify(studentsData));
+      }, [studentsData]);
+
+      useEffect(() => {
+        localStorage.setItem("setoran_santri_v1", JSON.stringify(setoranList));
+      }, [setoranList]);
+
+      const isJenjang11 = currentClass.startsWith("11");
+      const currentStudents = studentsData[currentClass] || [];
+
+      const filteredStudents = currentStudents.filter(s =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.nisn.includes(searchQuery)
+      );
+
+      const calculateFinalScore = (s) => {
+        // Bobot: Presensi 10%, Tugas 20%, Portofolio 15%, UH 20%, UTS 15%, UAS 20%
+        const totalPertemuan = (s.hadir + s.sakit + s.izin + s.alpa) || 1;
+        const persentaseHadir = (s.hadir / totalPertemuan) * 100;
+        const score = (persentaseHadir * 0.1) +
+                      (Number(s.tugas || 0) * 0.2) +
+                      (Number(s.portofolio || 0) * 0.15) +
+                      (Number(s.uh || 0) * 0.2) +
+                      (Number(s.uts || 0) * 0.15) +
+                      (Number(s.uas || 0) * 0.2);
+        return Math.round(score);
+      };
+
+      const getPredicate = (score) => {
+        if (score >= 90) return { grade: "A", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
+        if (score >= 80) return { grade: "B", color: "text-blue-700 bg-blue-50 border-blue-200" };
+        if (score >= 75) return { grade: "C", color: "text-amber-700 bg-amber-50 border-amber-200" };
+        return { grade: "D", color: "text-rose-700 bg-rose-50 border-rose-200" };
+      };
+
+      const handleValueChange = (studentId, field, val) => {
+        const numVal = Math.max(0, Math.min(100, Number(val) || 0));
+        setStudentsData(prev => ({
+          ...prev,
+          [currentClass]: prev[currentClass].map(st => st.id === studentId ? { ...st, [field]: numVal } : st)
+        }));
+      };
+
+      const handleAddStudent = (e) => {
+        e.preventDefault();
+        if (!newStudent.name) return;
+        const newItem = {
+          id: Date.now(),
+          nisn: newStudent.nisn || `00${Math.floor(10000000 + Math.random() * 90000000)}`,
+          name: newStudent.name,
+          gender: newStudent.gender,
+          hadir: 0, sakit: 0, izin: 0, alpa: 0,
+          tugas: 80, portofolio: 80, uh: 75, uts: 75, uas: 75
+        };
+        setStudentsData(prev => ({
+          ...prev,
+          [currentClass]: [...(prev[currentClass] || []), newItem]
+        }));
+        setNewStudent({ name: "", nisn: "", gender: "L" });
+        setIsModalOpen(false);
+      };
+
+      const handleAddSetoran = (e) => {
+        e.preventDefault();
+        const std = currentStudents.find(s => s.id === Number(newSetoran.studentId));
+        if (!std || !newSetoran.title || !newSetoran.range) return;
+
+        const record = {
+          id: Date.now(),
+          studentId: std.id,
+          studentName: std.name,
+          className: currentClass,
+          type: isJenjang11 ? "nazham" : "matan",
+          title: newSetoran.title,
+          range: newSetoran.range,
+          score: Number(newSetoran.score) || 85,
+          status: newSetoran.status,
+          notes: newSetoran.notes,
+          date: newSetoran.date
+        };
+
+        setSetoranList([record, ...setoranList]);
+        setNewSetoran({
+          studentId: "",
+          title: "",
+          range: "",
+          score: 85,
+          status: "Lancar",
+          notes: "",
+          date: new Date().toISOString().split("T")[0]
+        });
+        setIsSetoranModalOpen(false);
+      };
+
+      const exportCSV = () => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "No,NISN,Nama Santri,L/P,Hadir,Sakit,Izin,Alpa,Tugas,Portofolio,UH,UTS,UAS,Nilai Akhir,Predikat\n";
+        
+        currentStudents.forEach((s, idx) => {
+          const na = calculateFinalScore(s);
+          const pred = getPredicate(na).grade;
+          csvContent += `"${idx + 1}","${s.nisn}","${s.name}","${s.gender}",${s.hadir},${s.sakit},${s.izin},${s.alpa},${s.tugas},${s.portofolio},${s.uh},${s.uts},${s.uas},${na},"${pred}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Data_Nilai_${currentClass}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const classSetorans = setoranList.filter(item => item.className === currentClass);
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Header Nav */}
+          <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md font-bold text-xl">
+                  <i className="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                  <h1 className="text-lg md:text-xl font-bold tracking-tight">Sistem Penilaian & Tahfiz Santri</h1>
+                  <p className="text-xs text-slate-400">Presensi, Setoran Matan & Bait Nazham, dan Ledger Akademik</p>
+                </div>
+              </div>
+
+              {/* Kelas Selector Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                {CLASSES.map((cls) => (
+                  <button
+                    key={cls}
+                    onClick={() => setCurrentClass(cls)}
+                    className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all whitespace-nowrap ${
+                      currentClass === cls
+                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20 scale-105"
+                        : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                    }`}
+                  >
+                    Kelas {cls}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </header>
+
+          {/* Subheader & Stats Bar */}
+          <section className="bg-white border-b border-slate-200 shadow-sm no-print">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                  Kelas {currentClass}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  {isJenjang11 ? "Jenjang Aliyah (Program Nazham)" : "Jenjang Tsanawiyah (Program Matan)"}
+                </span>
+                <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">
+                  {currentStudents.length} Santri
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
+                >
+                  <i className="fa-solid fa-user-plus"></i>
+                  <span>Tambah Santri</span>
+                </button>
+                <button
+                  onClick={exportCSV}
+                  className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
+                >
+                  <i className="fa-solid fa-file-excel text-emerald-600"></i>
+                  <span>Ekspor CSV</span>
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
+                >
+                  <i className="fa-solid fa-print text-blue-600"></i>
+                  <span>Cetak Ledger</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Navigation Sub-Tabs */}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+            <div className="flex items-center justify-between gap-4 mb-5 border-b border-slate-200 pb-2 no-print flex-wrap">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTab("nilai")}
+                  className={`px-4 py-2 rounded-t-lg font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+                    activeTab === "nilai"
+                      ? "border-emerald-600 text-emerald-700 bg-white"
+                      : "border-transparent text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <i className="fa-solid fa-graduation-cap"></i>
+                  Daftar Nilai & Ledger
+                </button>
+                <button
+                  onClick={() => setActiveTab("setoran")}
+                  className={`px-4 py-2 rounded-t-lg font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+                    activeTab === "setoran"
+                      ? "border-emerald-600 text-emerald-700 bg-white"
+                      : "border-transparent text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <i className="fa-solid fa-quran"></i>
+                  {isJenjang11 ? "Setoran Bait Nazham" : "Setoran Matan Kitab"}
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800">
+                    {classSetorans.length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("kehadiran")}
+                  className={`px-4 py-2 rounded-t-lg font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+                    activeTab === "kehadiran"
+                      ? "border-emerald-600 text-emerald-700 bg-white"
+                      : "border-transparent text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <i className="fa-solid fa-clipboard-user"></i>
+                  Jurnal Presensi
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Cari santri atau NISN..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-xs pl-8 pr-3 py-2 bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <i className="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+              </div>
+            </div>
+
+            {/* TAB 1: DAFTAR NILAI AKADEMIK & LEDGER */}
+            {activeTab === "nilai" && (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs md:text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                        <th className="py-3 px-3 text-center w-12">No</th>
+                        <th className="py-3 px-4">Nama Santri</th>
+                        <th className="py-3 px-2 text-center w-16">Hadir (%)</th>
+                        <th className="py-3 px-2 text-center w-16 bg-blue-50/50">Tugas (20%)</th>
+                        <th className="py-3 px-2 text-center w-16 bg-blue-50/50">Portofolio (15%)</th>
+                        <th className="py-3 px-2 text-center w-16 bg-amber-50/50">UH (20%)</th>
+                        <th className="py-3 px-2 text-center w-16 bg-purple-50/50">UTS (15%)</th>
+                        <th className="py-3 px-2 text-center w-16 bg-purple-50/50">UAS (20%)</th>
+                        <th className="py-3 px-3 text-center w-20 bg-emerald-50 text-emerald-900 font-extrabold">Nilai Akhir</th>
+                        <th className="py-3 px-2 text-center w-16">Predikat</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredStudents.length === 0 ? (
+                        <tr>
+                          <td colSpan="10" className="py-8 text-center text-slate-400">
+                            Tidak ada data santri di kelas ini.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredStudents.map((s, idx) => {
+                          const totalPresensi = (s.hadir + s.sakit + s.izin + s.alpa) || 1;
+                          const persenHadir = Math.round((s.hadir / totalPresensi) * 100);
+                          const na = calculateFinalScore(s);
+                          const pred = getPredicate(na);
+
+                          return (
+                            <tr key={s.id} className="hover:bg-slate-50/80 transition">
+                              <td className="py-2.5 px-3 text-center text-slate-500 font-medium">{idx + 1}</td>
+                              <td className="py-2.5 px-4">
+                                <div className="font-semibold text-slate-800">{s.name}</div>
+                                <div className="text-[10px] text-slate-400">NISN: {s.nisn} ({s.gender})</div>
+                              </td>
+                              <td className="py-2 px-2 text-center font-bold text-slate-700">
+                                <span className={persenHadir < 75 ? "text-rose-600" : "text-emerald-700"}>
+                                  {persenHadir}%
+                                </span>
+                              </td>
+                              <td className="py-2 px-2 text-center bg-blue-50/30">
+                                <input
+                                  type="number"
+                                  value={s.tugas}
+                                  onChange={(e) => handleValueChange(s.id, "tugas", e.target.value)}
+                                  className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs focus:ring-1 focus:ring-emerald-500"
+                                />
+                              </td>
+                              <td className="py-2 px-2 text-center bg-blue-50/30">
+                                <input
+                                  type="number"
+                                  value={s.portofolio}
+                                  onChange={(e) => handleValueChange(s.id, "portofolio", e.target.value)}
+                                  className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs focus:ring-1 focus:ring-emerald-500"
+                                />
+                              </td>
+                              <td className="py-2 px-2 text-center bg-amber-50/30">
+                                <input
+                                  type="number"
+                                  value={s.uh}
+                                  onChange={(e) => handleValueChange(s.id, "uh", e.target.value)}
+                                  className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs focus:ring-1 focus:ring-emerald-500"
+                                />
+                              </td>
+                              <td className="py-2 px-2 text-center bg-purple-50/30">
+                                <input
+                                  type="number"
+                                  value={s.uts}
+                                  onChange={(e) => handleValueChange(s.id, "uts", e.target.value)}
+                                  className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs focus:ring-1 focus:ring-emerald-500"
+                                />
+                              </td>
+                              <td className="py-2 px-2 text-center bg-purple-50/30">
+                                <input
+                                  type="number"
+                                  value={s.uas}
+                                  onChange={(e) => handleValueChange(s.id, "uas", e.target.value)}
+                                  className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs focus:ring-1 focus:ring-emerald-500"
+                                />
+                              </td>
+                              <td className="py-2 px-3 text-center bg-emerald-50 font-black text-emerald-800 text-sm">
+                                {na}
+                              </td>
+                              <td className="py-2 px-2 text-center">
+                                <span className={`px-2 py-0.5 text-xs font-bold rounded-md border ${pred.color}`}>
+                                  {pred.grade}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: SETORAN MATAN / NAZHAM */}
+            {activeTab === "setoran" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                  <div>
+                    <h3 className="font-bold text-emerald-900 text-sm">
+                      {isJenjang11 ? "Mutaba'ah Setoran Bait Nazham (Kelas 11)" : "Mutaba'ah Setoran Matan Kitab (Kelas 8 & 9)"}
+                    </h3>
+                    <p className="text-xs text-emerald-700">
+                      {isJenjang11
+                        ? "Pencatatan hafalan bait nazham seperti Alfiyah Ibnu Malik, Al-Imrithi, Jauharatut Tauhid, dll."
+                        : "Pencatatan hafalan matan kitab seperti Matan Al-Jurumiyyah, Al-Ghayah wat Taqrib, dll."}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsSetoranModalOpen(true)}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow"
+                  >
+                    <i className="fa-solid fa-plus"></i>
+                    <span>Catat Setoran Baru</span>
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <table className="w-full text-left border-collapse text-xs md:text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                        <th className="py-3 px-3 text-center w-12">No</th>
+                        <th className="py-3 px-4">Nama Santri</th>
+                        <th className="py-3 px-4">{isJenjang11 ? "Nama Nazham" : "Kitab Matan"}</th>
+                        <th className="py-3 px-4">{isJenjang11 ? "Rentang Bait" : "Bab / Halaman"}</th>
+                        <th className="py-3 px-3 text-center w-24">Tanggal</th>
+                        <th className="py-3 px-3 text-center w-24">Status</th>
+                        <th className="py-3 px-2 text-center w-16">Nilai</th>
+                        <th className="py-3 px-4">Catatan Ustadz</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {classSetorans.length === 0 ? (
+                        <tr>
+                          <td colSpan="8" className="py-8 text-center text-slate-400">
+                            Belum ada riwayat setoran di kelas {currentClass}. Klik "Catat Setoran Baru" untuk menambahkan.
+                          </td>
+                        </tr>
+                      ) : (
+                        classSetorans.map((item, idx) => (
+                          <tr key={item.id} className="hover:bg-slate-50/80">
+                            <td className="py-3 px-3 text-center text-slate-500 font-medium">{idx + 1}</td>
+                            <td className="py-3 px-4 font-semibold text-slate-800">{item.studentName}</td>
+                            <td className="py-3 px-4 text-emerald-700 font-bold">{item.title}</td>
+                            <td className="py-3 px-4 text-slate-700 font-medium">{item.range}</td>
+                            <td className="py-3 px-3 text-center text-slate-500">{item.date}</td>
+                            <td className="py-3 px-3 text-center">
+                              <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                                item.status === "Mutqin" ? "bg-emerald-100 text-emerald-800" :
+                                item.status === "Lancar" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"
+                              }`}>
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-2 text-center font-bold text-slate-800">{item.score}</td>
+                            <td className="py-3 px-4 text-xs text-slate-500 italic">{item.notes || "-"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PRESENSI & KEHADIRAN */}
+            {activeTab === "kehadiran" && (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table className="w-full text-left border-collapse text-xs md:text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                      <th className="py-3 px-3 text-center w-12">No</th>
+                      <th className="py-3 px-4">Nama Santri</th>
+                      <th className="py-3 px-2 text-center w-20 bg-emerald-50">Hadir (H)</th>
+                      <th className="py-3 px-2 text-center w-20 bg-blue-50">Sakit (S)</th>
+                      <th className="py-3 px-2 text-center w-20 bg-amber-50">Izin (I)</th>
+                      <th className="py-3 px-2 text-center w-20 bg-rose-50">Alpa (A)</th>
+                      <th className="py-3 px-3 text-center w-24">Total Pertemuan</th>
+                      <th className="py-3 px-3 text-center w-24 font-bold text-emerald-800">% Kehadiran</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredStudents.map((s, idx) => {
+                      const total = s.hadir + s.sakit + s.izin + s.alpa;
+                      const persentase = total > 0 ? Math.round((s.hadir / total) * 100) : 0;
+                      return (
+                        <tr key={s.id} className="hover:bg-slate-50/80">
+                          <td className="py-2.5 px-3 text-center text-slate-500">{idx + 1}</td>
+                          <td className="py-2.5 px-4 font-semibold text-slate-800">{s.name}</td>
+                          <td className="py-2 px-2 text-center bg-emerald-50/40">
+                            <input
+                              type="number"
+                              value={s.hadir}
+                              onChange={(e) => handleValueChange(s.id, "hadir", e.target.value)}
+                              className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center bg-blue-50/40">
+                            <input
+                              type="number"
+                              value={s.sakit}
+                              onChange={(e) => handleValueChange(s.id, "sakit", e.target.value)}
+                              className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center bg-amber-50/40">
+                            <input
+                              type="number"
+                              value={s.izin}
+                              onChange={(e) => handleValueChange(s.id, "izin", e.target.value)}
+                              className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center bg-rose-50/40">
+                            <input
+                              type="number"
+                              value={s.alpa}
+                              onChange={(e) => handleValueChange(s.id, "alpa", e.target.value)}
+                              className="w-14 text-center py-1 bg-white border border-slate-300 rounded font-semibold text-xs"
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-center text-slate-600 font-semibold">{total} Hari</td>
+                          <td className="py-2 px-3 text-center font-bold">
+                            <span className={persentase >= 75 ? "text-emerald-700" : "text-rose-600"}>
+                              {persentase}%
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </main>
+
+          {/* MODAL TAMBAH SANTRI */}
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+                <h3 className="font-bold text-slate-800 text-base mb-4">Tambah Santri Baru (Kelas {currentClass})</h3>
+                <form onSubmit={handleAddStudent} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap Santri</label>
+                    <input
+                      type="text"
+                      required
+                      value={newStudent.name}
+                      onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                      placeholder="Contoh: Muhammad Yusuf"
+                      className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">NISN / No. Induk</label>
+                    <input
+                      type="text"
+                      value={newStudent.nisn}
+                      onChange={(e) => setNewStudent({ ...newStudent, nisn: e.target.value })}
+                      placeholder="Contoh: 0098765432"
+                      className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Jenis Kelamin</label>
+                    <select
+                      value={newStudent.gender}
+                      onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value })}
+                      className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    >
+                      <option value="L">Laki-laki (L)</option>
+                      <option value="P">Perempuan (P)</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow"
+                    >
+                      Simpan Santri
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL INPUT SETORAN */}
+          {isSetoranModalOpen && (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
+                <h3 className="font-bold text-slate-800 text-base mb-1">
+                  Catat Setoran {isJenjang11 ? "Bait Nazham" : "Matan Kitab"}
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">Kelas {currentClass}</p>
+
+                <form onSubmit={handleAddSetoran} className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Pilih Santri</label>
+                    <select
+                      required
+                      value={newSetoran.studentId}
+                      onChange={(e) => setNewSetoran({ ...newSetoran, studentId: e.target.value })}
+                      className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    >
+                      <option value="">-- Pilih Santri --</option>
+                      {currentStudents.map(st => (
+                        <option key={st.id} value={st.id}>{st.name} ({st.nisn})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        {isJenjang11 ? "Nama Nazham" : "Judul Kitab Matan"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={isJenjang11 ? "Misal: Alfiyah Ibnu Malik" : "Misal: Matan Al-Jurumiyyah"}
+                        value={newSetoran.title}
+                        onChange={(e) => setNewSetoran({ ...newSetoran, title: e.target.value })}
+                        className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        {isJenjang11 ? "Nomor Bait (Awal - Akhir)" : "Bab / Rentang Halaman"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={isJenjang11 ? "Bait 1 s/d 25" : "Bab Kalam (Hal 1-4)"}
+                        value={newSetoran.range}
+                        onChange={(e) => setNewSetoran({ ...newSetoran, range: e.target.value })}
+                        className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Tanggal</label>
+                      <input
+                        type="date"
+                        value={newSetoran.date}
+                        onChange={(e) => setNewSetoran({ ...newSetoran, date: e.target.value })}
+                        className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Status Hafalan</label>
+                      <select
+                        value={newSetoran.status}
+                        onChange={(e) => setNewSetoran({ ...newSetoran, status: e.target.value })}
+                        className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                      >
+                        <option value="Mutqin">Mutqin (Sangat Lancar)</option>
+                        <option value="Lancar">Lancar</option>
+                        <option value="Kurang Lancar">Kurang Lancar</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Nilai (0-100)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newSetoran.score}
+                        onChange={(e) => setNewSetoran({ ...newSetoran, score: e.target.value })}
+                        className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Catatan / Evaluasi Ustadz</label>
+                    <textarea
+                      rows="2"
+                      placeholder="Catatan makharijul huruf, kaidah tajwid, atau kelancaran..."
+                      value={newSetoran.notes}
+                      onChange={(e) => setNewSetoran({ ...newSetoran, notes: e.target.value })}
+                      className="w-full text-xs p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    ></textarea>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsSetoranModalOpen(false)}
+                      className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow"
+                    >
+                      Simpan Riwayat Setoran
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
+            <p>Buku Nilai & Presensi Terpadu Madrasah / Pesantren • Data tersimpan otomatis di perangkat</p>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
